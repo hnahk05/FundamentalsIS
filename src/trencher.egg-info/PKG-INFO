@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: trencher
+Version: 0.1.0
+Summary: Trencher Predictive Modeling — TinyMLOps pipeline for subsea cable trencher load-peak prediction
+License: MIT
+Requires-Python: >=3.10
+Requires-Dist: pandas>=2.0
+Requires-Dist: numpy>=1.24
+Requires-Dist: scikit-learn>=1.3
+Requires-Dist: matplotlib>=3.7
+Requires-Dist: seaborn>=0.12
+Requires-Dist: requests>=2.31
+Requires-Dist: sqlalchemy>=2.0
+Requires-Dist: psycopg2-binary>=2.9
+Requires-Dist: tqdm>=4.65
+Requires-Dist: pyyaml>=6.0

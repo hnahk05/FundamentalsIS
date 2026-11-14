@@ -1,0 +1,4 @@
+[console_scripts]
+trencher-analysis = trencher.scripts.run_analysis:main
+trencher-import = trencher.scripts.run_import:main
+trencher-pipeline = trencher.scripts.run_pipeline:main

@@ -1,0 +1,131 @@
+# Trencher Predictive Modeling — Pipeline Configuration
+# Editing this file reconfigures features and model without touching code.
+
+paths:
+  data: data
+  data_cleaned: data_cleaned
+  data_constructed: data_constructed
+  data_aggregated: data_aggregated
+  descriptive_analysis: descriptive_analysis
+  figures: figures
+
+kp_name: NAV_DATA_KP
+
+importer:
+  pi_server_url: https://pivisionnew.deme.com/
+  pi_dataserver_webid: F1DSCcJpKC0wZEqYsEggmte4CAUElEQQ
+  pi_streamsets: summary
+  pi_name_filter: "D398.AB-03.Trencher.RAW.*"
+  pi_parameters:
+    summaryType: average
+    summaryDuration: 1s
+    timeZone: UTC
+  intervals_csv: southfork_intervals_inc.csv
+  postgres:
+    tables:
+      small:
+        - soil_layers
+        - soil_layers_id
+        - trench_kp_details
+        - time_registration_v2
+        - boulder_risk_depth
+      trencher:
+        offset: 7900000
+        limit: 100000
+      wee_bankie_depth: true
+
+cleaner:
+  kp_column_raw: D398.AB-03.Trencher.RAW.NAV_DATA_KP
+  prefix_to_strip: "D398.AB-03.Trencher.RAW."
+
+constructor:
+  soil_layers:
+    - L00
+    - L01
+    - L02
+    - L03
+    - L04
+    - L05
+    - L06
+    - L07
+    - L08
+    - L09
+    - L10
+    - L11
+    - L12
+    - L13
+    - L14
+    - L15
+  instruments_depths:
+    - NAV_String_Out-Burial_Depth
+  burial_depth_diff_window: 4
+  file_filter:
+    must_contain:
+      - EXPORT
+      - A
+
+aggregator:
+  x_columns:
+    - NAV_String_Out-Burial_Depth_L00_percentage
+    - NAV_String_Out-Burial_Depth_L01_percentage
+    - NAV_String_Out-Burial_Depth_L02_percentage
+    - NAV_String_Out-Burial_Depth_L03_percentage
+    - NAV_String_Out-Burial_Depth_L04_percentage
+    - NAV_String_Out-Fwd_Port_Burial_Depth
+    - NAV_String_Out-Fwd_Stbd_Burial_Depth
+    - Vehicle_Fwd_Jetting-Port_Water_Gallery_Pressure
+    - Vehicle_Fwd_Jetting-Stbd_Water_Gallery_Pressure
+    - Vehicle_Jetting-Port_Water_Gallery_Pressure
+    - Vehicle_Jetting-Stbd_Water_Gallery_Pressure
+    - Vehicle_LP_Water_1_-Pump_Water_Pressure_1-Value
+    - Vehicle_LP_Water_2_-Pump_Water_Pressure_1-Value
+    - Vehicle_control-Avg_Track_Speed
+    - NAV_String_Out-Burial_Depth
+    - NAV_String_Out-Burial_Depth_Diff
+  y_column: Vehicle_Cable_Guide-I_Loadcell-Value
+  x_axis: NAV_DATA_KP
+  x_rolling_window: 121
+  y_rolling_window: 61
+
+peak_definer:
+  windows:
+    - size: 600
+      center: true
+      multiplier: 2.5
+    - size: 1200
+      center: true
+      multiplier: 2.5
+    - size: 30
+      center: false
+      multiplier: 3.0
+  load_column: Vehicle_Cable_Guide-I_Loadcell-Value
+
+model:
+  y_agg:
+    varname: Is_Peak
+    aggregation: ""
+    standardize: false
+  X_agg:
+    - varname: NAV_String_Out-Burial_Depth
+      aggregation: diff
+      standardize: false
+    - varname: NAV_String_Out-Burial_Depth_boulder_percentage
+      aggregation: mean
+      window: [-60, 60]
+      standardize: false
+    - varname: NAV_String_Out-Burial_Depth_L01_percentage
+      aggregation: mean
+      window: [-60, 60]
+      standardize: false
+    - varname: Vehicle_Cable_Guide-I_Loadcell-Value
+      aggregation: var
+      window: [-100, 30]
+  model_config:
+    degree: 2
+    interaction_only: true
+    regularization: l1
+    folds: 4
+    C: 1
+    alpha: 1.0
+    max_iter: 1000
+  trim_observations: 200
